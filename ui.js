@@ -1,0 +1,14 @@
+const API='/api';
+const COLORS=['default','yellow','green','blue','pink','purple'];
+const $=id=>document.getElementById(id);
+const escapeHtml=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function request(url,options={}){const response=await fetch(url,{...options,headers:{'Content-Type':'application/json',...options.headers}});let data;try{data=await response.json()}catch{throw Error('Unexpected server response')}if(!response.ok)throw Error(data.message||'Request failed');return data}
+function dateLabel(s){return s?new Date(s).toLocaleString():''}
+function getId(){return new URLSearchParams(location.search).get('id')}
+function setupTheme(){const current=localStorage.getItem('notes-theme')||'light';document.documentElement.dataset.theme=current;document.querySelectorAll('[data-action="toggle-theme"]').forEach(b=>b.addEventListener('click',()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=next;localStorage.setItem('notes-theme',next)}))}
+function setupColors(selected='default'){const row=$('colorRow');if(!row)return;row.dataset.selected=selected;row.innerHTML=COLORS.map(c=>`<button type="button" class="color-swatch ${c} ${c===selected?'selected':''}" data-color="${c}" aria-label="${c} color" title="${c}"></button>`).join('');row.addEventListener('click',e=>{const btn=e.target.closest('[data-color]');if(!btn)return;row.dataset.selected=btn.dataset.color;row.querySelectorAll('button').forEach(b=>b.classList.toggle('selected',b===btn))})}
+function notePayload(){return {title:$('title').value.trim(),content:$('content').value.trim(),tags:$('tags').value.split(',').map(x=>x.trim()).filter(Boolean),color:$('colorRow').dataset.selected||'default',pinned:$('pinned').checked}}
+function showError(message){const el=$('formError');if(el){el.textContent=message;el.style.display=message?'block':'none'}}
+function setupCount(){const area=$('content'),counter=$('contentCount');if(!area||!counter)return;const update=()=>counter.textContent=`${area.value.length} characters`;area.addEventListener('input',update);update()}
+function noteCard(n){return `<article class="note-card color-${escapeHtml(n.color||'default')}"><div class="card-top"><span class="date">${escapeHtml(dateLabel(n.updatedAt))}</span><button class="pin-btn" data-pin="${escapeHtml(n.id)}" title="${n.pinned?'Unpin':'Pin'}">${n.pinned?'📌':'📍'}</button></div><a class="card-title" href="note.html?id=${encodeURIComponent(n.id)}">${escapeHtml(n.title)}</a><p class="preview">${escapeHtml(n.content)}</p><div class="tags">${(n.tags||[]).map(t=>`<span class="tag">#${escapeHtml(t)}</span>`).join('')}</div><div class="card-actions"><a href="edit.html?id=${encodeURIComponent(n.id)}">Edit</a><button data-delete="${escapeHtml(n.id)}">Delete</button></div></article>`}
+document.addEventListener('DOMContentLoaded',setupTheme);
