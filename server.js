@@ -195,7 +195,7 @@ app.use("/api", (req, res) => {
 });
 
 app.use((req, res) => {
-  res.redirect("/");
+  res.status(404).send("Page not found");
 });
 
 app.use((err, req, res, next) => {
@@ -206,6 +206,10 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ message: "Internal server error" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
